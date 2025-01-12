@@ -4,15 +4,65 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, maximum-scale=1.0" />
 
-    <title>Example Student's HCDE 439 Physical Computing Page!</title>
+    <title>Hoon Yu's Assignment 1 - Blink!</title>
 
     <link href="style.css" rel="stylesheet" type="text/css" />
   </head>
   <body>
-    <h1>Example Student's Assignment 1!</h1>
+
+    <h1>Hoon Yu's Assignment 1 - Blink!</h1>
+
     <div class="header">
-      <img src="red-panda.jpg" />
-      <p>Here is all the documentation for assignment 1!</p>
+      <img src="circuit.jpg" />
+      <p>The image of circuit that in which three Red LEDs are 
+        blinking independently.
+        The Arduino microcontrollers and IDE are used to 
+        program the sequence of each blinking.  </p>
+
+
+
+
     </div>
+
+    <div class="header">
+      <img src="BlinkVid.gif" />
+      <p> The animated version of thre circuit and breadboard, 
+        making three red-LEDs blink all with a different sequence. 
+      </p>
+    </div>
+
+
+    <div class="header">
+      <img src="blinkCode.jpg" />
+      <p> The snippet of code in IDE that programs the blinking of red-LEDs.
+        As shown, three chunks of code indepnedently controlls the cutomized
+        blinking system.
+      </p>
+    </div>
+
+    <div class="header">
+      <img src="schematic.jpg" />
+      <p> The Schematic of the circuit and calculations for the resistance.
+        Three resistors of 220 ohms are used since each red-LEDs require a resistance
+        higher than 160 ohms.
+      </p>
+    </div>
+
+
+    <div class="header">
+      <img src="question1.jpg" />
+      <p> 1. A graph that answers question 1 of Additional questions.<br />
+
+      2. About 8 red-LEDs can blink independently in Arduino. 
+        This is because 1 red-LED need about 20mA current, meaning 8 X 20mA = 160mA.
+        Since the total current is limited to 200mA, 8 red-LEDs can fully function.
+        Again, this will draw the current of 160mA.<br />
+        
+      4.  In human eyes, you need to blink the LEDs in about 0.05 seconds (meaning delay has a value of 0.05 seconds),
+        which is too fast for us to perceive. </p>
+      </p>
+    </div>
+
+
   </body>
 </html>
