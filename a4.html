@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, maximum-scale=1.0" />
+
+    <title>Hoon Yu's Assignment 4 - Libraries!</title>
+
+    <link href="style.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+
+    <h1>Hoon Yu's Assignment 4 - Libraries!</h1>
+
+    <div class="header">
+      <img src="Library/Circuit.jpg" />
+      <p>The image of the circuit showing a coin capacitor and the servo motor that behaves 
+        based on the input gained by the coin capacitor.
+        The Arduino microcontrollers and IDE are used to 
+        program the mapping of the coin capcitior synchronized with the angle rotation of the servo motor.
+        *Note that 10K resistor was used for the Coin Capacitive Sensor since using higher resistor value
+        will cause the sensor to become extremely sensitive, such that I need to put my finger farther away
+        and it will be hard to manage the servo motor. 
+     </p>
+    </div>
+
+    <div class="header">
+      <img src="Library/Video.gif" />
+      <p> The animated version of the circuit, 
+        making the servo motor rotate as the finger gets closer to the coin. 
+        Notice how the closer the finger gets to the coin, the more servo motor becomes reactive.
+        When the certain threshold is reached, the motor spins up to 180 degrees.
+      </p>
+    </div>
+
+
+    <div class="header">
+        <pre> 
+            <code>
+              #include <CapacitiveSensor.h>   //A capacitive library initiated.
+                #include <Servo.h>              //A servo library initiated.
+                
+                Servo myServo;    //A variable that creates a servo object to control the servo motor.
+                CapacitiveSensor   cs_4_2 = CapacitiveSensor(4,2);    	// 1 megohm resistor between pins 4 & 2, pin 2 is sensor pin, add wire, metal thing
+                int sensVal=0;    //Initializing the reading value from the coin capacitive to 0.
+                
+                //The setup function runs once you press reset or power the board.
+                void setup() {
+                   cs_4_2.set_CS_AutocaL_Millis(0xFFFFFFFF); 	// Turn off autocalibrate on channel 1 - just as an example.
+                   Serial.begin(9600);                        // Starts serial communication and sets the baud rate to 9600 bits per sec.
+                   myServo.attach(9);                         // Attaching the servo Variable to pin 9.
+                }
+                
+                //The Loop function runs over and over again.
+                void loop()               	 
+                {
+                  long start = millis();                        //Storing the number of miliseconds since running the program to the "start" variable.
+                  long total1 =  cs_4_2.capacitiveSensor(30);   //Instructing the coin cpacitive sensor to take the reading for 30 millisecdons.
+                
+                  sensVal = map(total1,20,600,0,180); // Synchronizing(mapping) the sensor value ranges to the output ranges in the servo motor. 
+                  Serial.print(millis() - start);    	// check on performance in milliseconds
+                  Serial.print("\t");                	// tab character for debug window spacing
+                
+                  Serial.println(total1);            	// print the sensor output.
+                  delay(10);                         	// arbitrary delay to limit data to serial port
+                  myServo.write(sensVal);             // Commanding the servo motor to behave based on the mapping of the sensor. 
+                }
+            </code>
+
+        </pre>
+            <p> The snippet of code in IDE that programs the motion of the servo motor 
+                with the synchronization of the coin capacitor.
+                As shown, two libraries: CapacitiveSensor and Servo are used.
+                *Note that the value of the map function is based on the calibration: 
+                According to the result shown in the serial monitor,
+                the sensor's minimum value was approximately 20, wheras its maximum value was approximately 600.
+            </p>
+    </div>
+
+
+    <div class="header">
+      <img src="Library/Schematic.jpg" />
+      <p> The schematic of the entire circuit and showing how each components are configuered.
+        Notice how each coin capacitive sensor and the servo motor is arranged independently.
+      </p>
+    </div>
+
+
+
+    <div class="header">
+      <img src="Input/Calculation1.jpg" />
+      <p> The graph that shows the voltage at pin 9 over two seconds. 
+        The line is flat, since the servo motor will have a constant voltage produced. 
+      </p>
+    </div>
+
+    <div class="header">
+        <img src="Library/Calculation2,3.jpg" />
+        <p> The calculation process for Question 2 and 3.
+          Notice how errneous reading 1% and 10% can be managed by constraining the mapping value,
+          with adjusted range accroding to the error percentage.
+        </p>
+      </div>
+
+
+  </body>
+</html>
