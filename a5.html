@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, maximum-scale=1.0" />
+
+    <title>Hoon Yu's Assignment 5 - Higher Voltage and Transistors !</title>
+
+    <link href="style.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+
+    <h1>Hoon Yu's Assignment 5 - Higher Voltage and Transistors!</h1>
+
+    <div class="header">
+      <img src="Higher/circuit.jpg" />
+      <p>The image of the circuit showing a coin capacitor, a N-MOSFET transistor, and the 
+        DC motor with the fan that behaves based on the input gained by the coin capacitor.
+        The Arduino microcontrollers and IDE are used to 
+        program the mapping of the coin capcitior synchronized with the intensity of the DC motor.
+        *Note that 10K resistor was used for the Coin Capacitive Sensor since using higher resistor value
+        will cause the sensor to become extremely sensitive, such that I need to put my finger farther away
+        and it will be hard to manage the servo motor. (The schematic should have 10K not 1M resistor).
+     </p>
+    </div>
+
+    <div class="header">
+      <img src="Higher/video.gif" />
+      <p> The animated version of the circuit, 
+        making the DC motor rotate as the finger gets closer to the coin. 
+        Notice how the closer the finger gets to the coin, the more motor rotate faster.
+        When the certain threshold is reached, the motor starts spinning rapidly.
+      </p>
+    </div>
+
+
+    <div class="header">
+        <pre> 
+            <code>
+                #include <CapacitiveSensor.h>   //A capacitive library initiated.
+
+
+                    int motorPin = 9; //Assigning the motorPin to pin 9 that controls the motor behavior. 
+                    CapacitiveSensor   cs_4_2 = CapacitiveSensor(4,2);    	// 1 megohm resistor between pins 4 & 2, pin 2 is sensor pin, add wire, metal thing
+                    int sensVal=0;    //Initializing the reading value from the coin capacitive to 0.
+                    
+                    //The setup function runs once you press reset or power the board.
+                    void setup() {
+                       cs_4_2.set_CS_AutocaL_Millis(0xFFFFFFFF); 	// Turn off autocalibrate on channel 1 - just as an example.
+                       Serial.begin(9600);                        // Starts serial communication and sets the baud rate to 9600 bits per sec.
+                       pinMode(motorPin, OUTPUT);                 // Setting the motorPin to be an Output type, that "acts"
+                    }
+                    
+                    //The Loop function runs over and over again.
+                    void loop()               	 
+                    {
+                        long start = millis();                        //Storing the number of miliseconds since running the program to the "start" variable.
+                        long total1 =  cs_4_2.capacitiveSensor(30);   //Instructing the coin cpacitive sensor to take the reading for 30 millisecdons.
+                    
+                      sensVal = map(total1,20,600,0,255); // Synchronizing(mapping) the sensor value ranges to the output ranges in the DC motor. 
+                        Serial.print(millis() - start);    	// check on performance in milliseconds
+                        Serial.print("\t");                	// tab character for debug window spacing
+                    
+                        Serial.println(total1);            	// print the sensor output.
+                        delay(10);                         	// arbitrary delay to limit data to serial port
+                      analogWrite(motorPin, sensVal);     // Commanding the DC motor to behave based on the mapping of the sensor. 
+                    }
+                    
+            </code>
+
+        </pre>
+            <p> The snippet of code in IDE that programs the motion of the DC motor 
+                with the synchronization of the coin capacitor.
+                As shown, one library: CapacitiveSensor is used.
+                *Note that the value of the map function is based on the calibration: 
+                According to the result shown in the serial monitor,
+                the sensor's minimum value was approximately 20, wheras its maximum value was approximately 600.
+            </p>
+    </div>
+
+
+    <div class="header">
+      <img src="Higher/schematic.jpg" />
+      <p> The schematic of the entire circuit and showing how each components are configuered.
+        Notice how each coin capacitive sensor and the DC motor is arranged independently.
+        According to my calculation, the max current used at the transistor is 0.12A
+        (The schematic should have 10K not 1M resistor).
+      </p>
+    </div>
+
+
+
+    <div class="header">
+      <img src="Higher/question1.jpg" />
+      <p> When I studied the datasheet for the N-MOSFET transsitor, 
+        the Maximum Value section indicated that the the absolute max current the transistor can hold is 80A.
+      </p>
+    </div>
+
+
+
+
+    <div class="header">
+        <img src="Higher/question2&3.jpg" />
+        <p> The calculation process for Question 2 and 3.
+          Both of them shows the Schematic configuration of various electrical components. 
+        </p>
+      </div>
+
+ <div class="header">
+      <img src="Higher/question3.jpg" />
+      <p> The pseduo code showing how to control two motors using Arduino, and L293D chip. 
+      </p>
+    </div>
+
+    <div class="header">
+        <img src="Higher/question3+.jpg" />
+        <p> Continuation of the Question 3.
+        </p>
+      </div>
+  
+      <div class="header">
+        <img src="Higher/question3++.jpg" />
+        <p> Continuation of the Question 3.  
+        </p>
+      </div>
+
+
+  </body>
+</html>
