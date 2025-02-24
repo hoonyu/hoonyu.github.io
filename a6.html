@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, maximum-scale=1.0" />
+
+    <title>Hoon Yu's Assignment 6 - Talking to Web!</title>
+
+    <link href="style.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+
+    <h1>Hoon Yu's Assignment 6 - Talking to Web!</h1>
+
+    <div class="header">
+      <img src="Talk/circuit.jpg" />
+      <p>The image of the circuit showing a coin capacitor, a button, blue LED, p5.js web screen and the 
+        arduino which all creates an interactive product that user can experience.
+        The Arduino microcontrollers and IDE are used to 
+        program the mapping of the coin capcitior and the button the two input that is reflected on the web screen.
+        Also, user can click the mouse to turn the blue LEDs on.
+     </p>
+    </div>
+
+    <div class="header">
+      <img src="Talk/video.gif" />
+      <p> The animated version of the circuit, in which this product interacts with the user in three different ways.
+        Whenever user either press the button or touch the coin (capactivie sensor), the screen reflects it with
+        the according phrases.
+        Notice how clikcing the button also lights up the blue LEDs.
+      </p>
+    </div>
+
+
+
+    <div class="header">
+        <pre> 
+            <code>
+                #include &lt;CapacitiveSensor.h&gt; // A capacitive Library Initiated.
+
+                    const int LED_PIN = 8; //Assign LED_PIN variable connected to pin 8.
+                    CapacitiveSensor   cs_4_2 = CapacitiveSensor(4,2); //1 megaohm resistor between pins 4 & 2, pin 2 is a sensor pin.                             
+                    const int BUTTON_PIN = 13; //Assign BUTTON_PIN variable for the button connected to pin 13.
+                    
+                    // This setup function runs once you press reset or power the board.
+                    void setup()
+                    {
+                      pinMode(LED_PIN, OUTPUT); //pin13 is assigned as an OUPTPUT.
+                      cs_4_2.set_CS_AutocaL_Millis(0xFFFFFFFF); //Turn off autocalibrate on channel 1 - just as an example. 
+                      Serial.begin(9600); //Starts serial communication and sets the baud rate to 9600 bits per sec.
+                      pinMode(BUTTON_PIN, INPUT); //Button is assigned as an Input.
+                    }
+                    
+                    // The loop function runs over and over again.
+                    void loop(){ 
+                      long value =  cs_4_2.capacitiveSensor(30); //Instructing the coin capacitive sensor to read for 30 milliseconds.
+                      bool buttonState = digitalRead(BUTTON_PIN); //Variable that stores the reading of the button.
+                      buttonState == LOW; //Initially the button is not pressed.
+                      
+                      if (buttonState == HIGH) {
+                        Serial.println("1"); //Transmit 1 if the button is pressed.
+                      } else if (value > 400) {
+                        Serial.println("2"); //Transmit 2 if the capacitive sensor's reading goes over 400.
+                      } else {
+                        Serial.println("3"); //Otherwise, transmit 3.
+                      }
+                    
+                      delay(50);//Arbitrary delay to limit the data to serial port.
+                    
+                      if (Serial.available() > 0){
+                        char command = Serial.read(); //Read the serial output produced by the web.
+                        if (command == '1'){
+                          digitalWrite(LED_PIN, HIGH); //Turn on the LED if the mouse is clicked.
+                        } else if (command == '0'){
+                          digitalWrite(LED_PIN, LOW); //Turn off the LED if the mouse is not clicked.
+                        }
+                      }
+                    }
+                    
+            </code>
+
+        </pre>
+            <p> The snippet of code in IDE that programs the product.
+                As shown, one library: CapacitiveSensor is used.
+                *Note that the value of the map function is based on the calibration: 
+                According to the result shown in the serial monitor,
+                the sensor's threshold was usually 400, the capvalue that indicates user have touched the coin.
+    
+            </p>
+    </div>
+
+
+
+    <div class="header">
+        <pre> 
+            <code>
+                const BAUD_RATE = 9600; // Assigning the baud rate that mtaches the Arduino sketch.
+
+                let port, connectBtn; // Declaring global variables.
+
+                function setup() {
+                setupSerial(); // Run our serial setup function (below)
+
+                // Create a canvas that is the size of our browser window.
+                // windowWidth and windowHeight are p5 variables
+                createCanvas(windowWidth, windowHeight);
+
+                // p5 text settings. BOLD and CENTER are constants provided by p5.
+                // See the "Typography" section in the p5 reference: https://p5js.org/reference/
+                textFont("system-ui", 50);
+                textStyle(BOLD);
+                textAlign(CENTER, CENTER);
+                }
+
+                //Filling the content of the canvas.
+                function draw() {
+                const portIsOpen = checkPort(); // Check whether the port is open (see checkPort function below)
+                if (!portIsOpen) return; // If the port is not open, exit the draw loop
+
+                let str = port.readUntil("\n"); // Read from the port until the newline.
+                if (str.length == 0) return; // If we didn't read anything, return.
+
+                // trim the whitespace (the newline) and convert the string to a number.
+                const result = Number(str.trim());
+
+                // Change text and colors based on result provided by the input device. 
+                if (result == 3) {
+                    // If the button is not pressed nor sensor is touched
+                    background("darkcyan"); // Background color filled darkcyan
+                    fill("coral"); // Fill color for the text
+                    text("Press the Button or Touch the Coin!", windowWidth / 2, windowHeight / 2); // Position text in center of the screen.
+                } else if (result == 1) {
+                    // If the button is pressed
+                    background("orange"); // Background color
+                    fill("purple"); // Fill color for the text
+                    text("Good job! Button is Pressed", windowWidth / 2, windowHeight / 2); // Position text in center of the screen.
+                } else if (result == 2) {
+                    //If the coin is touched.
+                    background("lightskyblue"); // Background color
+                    fill("yellow"); // Fill color for the text
+                    text("Good job! Coin is touched", windowWidth / 2, windowHeight / 2); // Position text in center of the screen.
+                }
+
+                //Display this phrase so users know that they can click the screen.
+                fill("black");
+                text("Also, Click Anywhere to turn the Blue LED!", 850, 600);
+
+
+                }
+
+                // Three helper functions for managing the serial connection.
+
+                function setupSerial() {
+                port = createSerial();
+
+                // Check to see if there are any ports we have used previously
+                let usedPorts = usedSerialPorts();
+                if (usedPorts.length > 0) {
+                    // If there are ports we've used, open the first one
+                    port.open(usedPorts[0], BAUD_RATE);
+                }
+
+                // create a connect button
+                connectBtn = createButton("Connect to Arduino");
+                connectBtn.position(5, 5); // Position the button in the top left of the screen.
+                connectBtn.mouseClicked(onConnectButtonClicked); // When the button is clicked, run the onConnectButtonClicked function
+                }
+
+                function checkPort() {
+                if (!port.opened()) {
+                    // If the port is not open, change button text
+                    connectBtn.html("Connect to Arduino");
+                    // Set background to gray
+                    background("gray");
+                    return false;
+                } else {
+                    // Otherwise we are connected
+                    connectBtn.html("Disconnect");
+                    return true;
+                }
+                }
+
+                function onConnectButtonClicked() {
+                // When the connect button is clicked
+                if (!port.opened()) {
+                    // If the port is not opened, we open it
+                    port.open(BAUD_RATE);
+                } else {
+                    // Otherwise, we close it!
+                    port.close();
+                }
+
+                }
+
+                //When user clicks their mouse.
+                function mousePressed(){
+                if (port.opened()){
+                    //Transmit the data of click.
+                    port.write('1\n');
+                }
+                }
+
+                //When user is not clicking their mouse.
+                function mouseReleased(){
+                if (port.opened()) {
+                    //Transmit the data of not clicking.
+                    port.write('0\n');
+                }
+
+                }
+                    
+            </code>
+
+        </pre>
+            <p> The snippet of code in p5.js that programs the web.
+                As shown, there are various main functions like draw and other helper function
+                to efficiently render the data communicated with the arduino.
+    
+            </p>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div class="header">
+      <img src="Talk/schematic.jpg" />
+      <p> The schematic of the entire circuit and showing how each components are configuered.
+        Notice how each coin capacitive sensor and the button is arranged independently.
+        According to my calculation, the 10K ohm resistor was used for the button as it requires enough Voltage
+        to precisely read the button movement. 1M ohm resistor was used for the capacitor as it needs large resistor
+        to prevent voltage surge influx and protect the arduino.
+      </p>
+    </div>
+
+
+
+
+
+
+  </body>
+</html>
