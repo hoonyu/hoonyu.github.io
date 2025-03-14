@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, maximum-scale=1.0" />
+
+    <title>Hoon Yu's Final Project - Deepwork Timer!</title>
+
+    <link href="style.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+
+    <h1>Hoon Yu's Final Project - Deepwork Timer!</h1>
+
+    <div class="header">
+        <img src="Deepwork/intro.jpg" />
+      </div>
+   
+    <div class="header">
+      <img src="Deepwork/initialPlan.jpg" />
+      <p>Here is the original Project Plan and Concept that has evolved over time. 
+     </p>
+    </div>
+
+    <div class="header">
+      <img src="Deepwork/circuit.jpg" />
+      <p> How the circuit of the timer is configuered. Various components are utilized.
+      </p>
+    </div>
+
+    <div class="header">
+        <img src="Deepwork/concept.jpg" />
+        <p> The main concept and the bill of materials.
+            Users will use this timer to set up a certain time for focus.
+            Depends on the status, the light will change its color (blue for concetnration, 
+            red for vacancy + attention, and green for the resting period).
+            *Note that although not reflect on the slide, the "Do Not Distrub" mode on my computer 
+            and phone will be activated once the user starts the timer. 
+            Inspired by the "On Live" sings on the studio. 
+        </p>
+      </div>
+
+
+      <div class="header">
+        <img src="Deepwork/execution.jpg" />
+        <p> Technical Write up of how each components will function.
+        </p>
+      </div>
+
+
+     <div class="header">
+        <img src="Deepwork/IMG_4201.jpg" />
+        <p> Schematic of the RGB LED.
+        </p>
+        </div>
+
+    <div class="header">
+        <img src="Deepwork/IMG_4199.jpg" />
+        <p> Schematic of the LCD Display and the Rotary Encoder.
+        </p>
+      </div>
+
+      <div class="header">
+        <img src="Deepwork/IMG_4200.jpg" />
+        <p> Schematic of the ultrasonic sensor and the buzzer.
+        </p>
+      </div>
+
+
+    <div class="header">
+        <pre> 
+            <code>
+                // Including the library in which its functions will be utilized: LiquidCrystal and Encoder.
+#include <LiquidCrystal.h>
+#include <Encoder.h>
+
+
+// Initializing LCD Display with pin connections. (RS, E, D4, D5, D6, D7)
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+//Articulating the Rotary Encoder Pins.
+#define ENCODER_CLK 8    //CLK pin to pin 8.
+#define ENCODER_DT 7     //DT pin to pin 7.
+#define ENCODER_BTN 6    //BT pin to pin 6.
+
+//Articulating pin values for the ultrasonic sensor and the buzzer.
+const int trigPin = 9;   //Connecting the trig to pint 9.
+const int echoPin = 13;  //Connecting the echo to pin 13.
+const int buzzer = 10;   //buzzer is connected to pin 10.
+
+//
+int currentTime = 0;     //The current time variable used for the vacancy calculation.
+
+//Defining the encoder pins for CLK and DT pin. 
+Encoder myEnc(ENCODER_CLK, ENCODER_DT);
+
+//Providing initial values for various variables.
+int lastPosition = 0;             //Last rotation position for the encoder to track.
+int timerValue = 0;               //Timer value assigned by the rotary encoder.
+bool timerRunning = false;        //To find if the timer is running or not.
+unsigned long startTime;          //Storing the time value at the start of the timer. 
+unsigned long offChairTime = 0;   //Initializing the amount of time of vacancy
+
+//This setup function runs once oyu press reset or power the board. 
+void setup() {
+    Serial.begin(9600);   //Enabling the Serial communication.
+    pinMode(A0, OUTPUT);  //Red LED
+    pinMode(A1, OUTPUT);  //Green LED 
+    pinMode(A2, OUTPUT);  //Blue LED
+    pinMode(ENCODER_BTN, INPUT_PULLUP); //Assigning the rotary encoder button to be pressed. 
+    lcd.begin(16, 2);     //16X2 Display configuered for the LCD Board.
+    lcd.setCursor(0, 0);  //Setting the LCD element display to begin at 0,0 position. 
+    lcd.print("Turn on DND mode"); //The element displayed at the top.
+    lcd.setCursor(0, 1);  //Setting the LCD element display to begin at 0,1 position.
+    lcd.print("Set Timer: 0 min"); //The element displayed at the bottom.
+    pinMode(trigPin, OUTPUT); //Setting the trig to be an Output.
+    pinMode(echoPin, INPUT);  //Setting the echo to be an Input.
+    pinMode(buzzer, OUTPUT);  //Setting the buzzer to be an Output. 
+}
+
+//This loop function runs over and over again.
+void loop() {
+
+    //RGB LED is initially off. 
+    digitalWrite(A0, LOW);  // Red LED Off
+    digitalWrite(A1, LOW);  // Green LED Off
+    digitalWrite(A2, LOW);  // Blue LED Off
+
+    //Storing the position of the rotation of the encoder.
+    int newPosition = myEnc.read() / 4;
+    //When the position of the encoder is changed, 
+    if (newPosition != lastPosition) {
+        // Count the amount of rotation. 
+        int steps = constrain(newPosition, 0, 12);
+        // Converting the rotation to a time value. 
+        timerValue = steps * 5;
+        //Displaying the converted time value in LCD.
+        lcd.setCursor(11, 1);
+        lcd.print("       "); // Clearing the previous value.
+        lcd.setCursor(10, 1);
+        lcd.print(timerValue);
+        lcd.print(" min");
+        //Updating the last position of the encoder.
+        lastPosition = newPosition;
+    }
+
+    //When the button is pressed.
+    if (digitalRead(ENCODER_BTN) == LOW) {
+        delay(200); //Delay to perceive the press.
+        Serial.println("pressed");  //Printing out in a serial channel that signals the Python code to execute the "Do Not Diturb" shortcut key.
+       
+        //If the timer is not on and the timer value increased,
+        if (!timerRunning && timerValue > 0) {
+            //Run the timer and display it on the LCD Display.
+            timerRunning = true;
+            startTime = millis();
+            lcd.clear();
+            lcd.setCursor(0, 0);
+            lcd.print("Focus For:");
+        }
+       
+    }
+
+    //While the timer is on,
+    if (timerRunning) {
+        //Light the RGB LED to the mix of blue and green. 
+        digitalWrite(A2, HIGH);
+        digitalWrite(A0, LOW);
+        digitalWrite(A1, LOW);
+
+        //Keeping track of the time passed by.
+        unsigned long elapsed = (millis() - startTime) / 60000;
+        int remainingTime = max(0, timerValue - elapsed);
+        //Constantly updating the remained time.
+        lcd.setCursor(6, 1);
+        lcd.print("     ");
+        lcd.setCursor(6, 1);
+        lcd.print(remainingTime);
+        lcd.print(" min");
+
+        //Constantly running the Ultrasonic Sensor to perceive the user and its distance.
+        digitalWrite(trigPin, LOW);
+        delayMicroseconds(2);
+        digitalWrite(trigPin, HIGH);
+        delayMicroseconds(10);
+        digitalWrite(trigPin,LOW);
+
+        //Storing the value as a duration.
+        long duration = pulseIn(echoPin, HIGH, 30000);  //The distance value measured by the ultrasonic sensor.
+        Serial.println(duration);    //To check the distance value on the developer's end. 
+        currentTime = millis();     //Store the current "simultaneous" time. 
+
+        //If the sensor does not detect anything, 
+        if(duration > 5000){
+          if(offChairTime == 0){      //Track the time of vacancy.
+            offChairTime = millis();
+          } 
+          
+          if (currentTime - offChairTime > 4000){ //If the vacancy time is more than 4 seconds,
+            //Light the LED to red.
+            digitalWrite(A0, HIGH);
+            digitalWrite(A1, LOW);
+            digitalWrite(A2, LOW);
+            delay(1000);
+
+            //Buzz the buzzer to notify.
+            tone(buzzer,1000);
+            delay(1000);
+            noTone(buzzer);
+            delay(1000);
+          }
+        }else{  //As long as the sensor is detecting,
+          offChairTime = 0;       //Set the vacancy time to 0.
+          digitalWrite(A0,LOW);
+          digitalWrite(A2,HIGH);  //Blue LED continues to be on.
+          digitalWrite(A1,LOW);
+          delay(1000);
+        }
+
+        //If the timer is up,
+        if (remainingTime <= 0) {
+            lcd.clear();              
+            lcd.setCursor(0, 0);       
+            lcd.print("Time's Up!");  //Display this message.
+            timerRunning = false;     //Tinmer is now not running.
+            digitalWrite(A1,HIGH);    //Green LED is turned on.
+            digitalWrite(A2,LOW);
+            digitalWrite(A0,LOW);
+            delay(4000);
+
+            tone(buzzer, 1000);
+            delay(400);
+            noTone(buzzer);
+            delay(1000);
+
+            //Restoring the timer value and encoder position to default values.
+            timerValue = 0;
+            lastPosition = 0;
+            //Displaying the LCD to the default setting. 
+            lcd.clear();
+            lcd.print("Set Timer:");
+            lcd.setCursor(0,1);
+            lcd.print("Time: 0 min");
+        }
+    }
+}
+            </code>
+
+</pre>
+    <p> The snippet of code in IDE that programs the product.
+    </p>
+</div>
+
+
+
+    <div class="header">
+        <pre> 
+            <code>
+                import os       #Importing the os that is synchronizes between the Mac Operation System and Python.
+                import serial   #Importing the serial that enables reading the Serial Print value from Arudino IDE.
+                
+                SERIAL_PORT = "/dev/cu.usbmodem101"  # The serial Port connected to my USB port.
+                BAUD_RATE = 9600    #This serial rate must match with that of Arudino IDE
+                
+                try:
+                    ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1) #Initializing the Serial Monitor.
+                    print("Listening for button press...")  #Printing out its status
+                
+                    while True:
+                        if ser.in_waiting > 0:  
+                            line = ser.readline().decode("utf-8").strip() #Reading the Serial Input.
+                            if line == "pressed":   #Once the user presse the button, python receives the serial input.
+                                print("Button pressed! Running Shortcut...")  #Printing out its status.
+                                os.system('shortcuts run "Set Focus"') #Executing the Set Focus shortcut key on Mac
+                
+                except serial.SerialException as e: #In case of serial input providing a wrong value.
+                    print(f"Error: {e}")
+                
+             
+            </code>
+
+        </pre>
+            <p> The snippet of code in python that receives the Serial Print from arduino.
+                Once the user starts the timer by pressing the button, python will recognize the message
+                and run the shortcut key in my mac.
+            </p>
+    </div>
+
+
+    <div class="header">
+      <p> Here is the link to my demonstration video! Have fun watching!
+        https://youtu.be/nFZgXblV07w?si=ItyOPU6sAXAY62Eu
+      </p>
+    </div>
+
+
+
+  </body>
+</html>
